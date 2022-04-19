@@ -89,6 +89,31 @@ public class ApiServer extends AbstractVerticle {
           });
         }
       );
+///////////////////////////////////////////////////////////////////
+    router.get("/workers/:id")
+      .handler(routingContext -> {
+          String id = routingContext.request().getParam("id");
+          vertx.eventBus().request("getbyid", id, message -> {
+            if(message.succeeded()){
+              Response response =(Response)  message.result().body();
+              System.out.println("response is"+response);
+              routingContext.response().putHeader("content-type" ,"application/json")
+                .end(response.getResponseBody());
+            }
+            else{
+              HttpServerResponse serverResponse = routingContext.response();
+              ReplyException exception = (ReplyException) message.cause();
+//              serverResponse.setStatusCode(exception.failureCode());
+              serverResponse.setStatusCode(400);
+              serverResponse.putHeader("content-type","application/json")
+                .end(Utils.getErrorResponse(exception.getMessage()).encode());
+            }
+
+          });
+        }
+      );
+
+
 
     router.post("/employees")
       .handler(routingContext ->{
